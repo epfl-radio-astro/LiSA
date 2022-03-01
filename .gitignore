@@ -1,6 +1,6 @@
 venvs/*
 venv*
-
+*.DS_Store
 *.pyc
 *.png
 *.out

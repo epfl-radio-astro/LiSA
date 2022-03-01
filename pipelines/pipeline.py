@@ -1,12 +1,12 @@
-'''import numpy as np
+import numpy as np
 from modules.domain_reader import AstropyDomainReader   as Reader
 from modules.domain_reader import DomainData
-from modules.source_finder import LikelihoodFinder as Finder
-from modules.source_finder import merge_source_candidates, remove_suspicious_candidates
-from modules.truth_info import transforms
+from modules.nht.source_finder import LikelihoodFinder as Finder
+from modules.utils.source_candidate import merge_source_candidates, remove_suspicious_candidates
+
 from pickle import load
 
-from pathlib import Path'''
+from pathlib import Path
 import sys
 import configparser
 
@@ -117,7 +117,7 @@ if Path(source_candidates_file_name).is_file():
     print ("====== Domain {0}: Source candidate file {1} already exists, reading file ======".format(domain_index, source_candidates_file_name),flush=True)
 else:
     print("====== Domain {0}: finding candidate sources... ======".format(domain_index,source_candidates_file_name ), flush=True)
-    from modules.noise_profile import Landau, Gauss
+    from modules.nht.noise_profile import Landau, Gauss
     # configure NHT finder
     finder = Finder(reader_denoised, lkh_zbinning, Landau() if lkh_isdatadenoised else Gauss(), out_dir = output_directory, method="likelihood", df=20, lkh_threshold_attempts=10)
     # override algorithm's choice of likelihood threshold with user-defined choice
@@ -137,10 +137,9 @@ merge_source_candidates(source_candidates_file_name, merged_source_candidates_fi
 ######################################################
 print("====== Domain {0}: setting up Neural Network ======".format(domain_index), flush=True)
 import tensorflow as tf
-from modules.ai.utils import loss_fn
+from modules.ai.utils import transforms, loss_fn, get_cutouts
 import modules.ai.classifier as classifier
 import modules.ai.regressor as regressor
-from modules.ai.utils import get_cutouts
 
 #===== set up CNN and input/output scale factors  =====
 CNN_classifier=tf.keras.models.load_model("data/SKA_SDC2_classifier_CNN")
@@ -180,7 +179,7 @@ with open(merged_source_candidates_file_name, 'r') as f:
         predictions_tr = transforms.inv_transform(predictions)
         flux, hisize, sinposa, cosposa, inca, w20 = predictions_tr[0]
         posa = (-1*np.arctan2(sinposa,cosposa)*180/3.14159+360+90)%360
-        
+
         result = "{0} {1} {2} {3} {4} {5} {6} {7}\n".format(ra, dec, hisize, flux, freq, posa, inca, w20)
         results.append(result)
 print("====== Domain {0}: writing final catalog ======".format(domain_index), flush=True)

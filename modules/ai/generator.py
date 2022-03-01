@@ -4,7 +4,7 @@ from modules.ai.enums import InputMode, AugmentMode
 import numpy as np
 import random
 import scipy
-from modules.truth_info import transforms
+from modules.ai.utils import transforms
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -57,7 +57,7 @@ class DataGenerator(keras.utils.Sequence):
     def load_data(self, flux_threshold = 0):
         print("Loading data...")
         import glob
-        from modules.truth_info import TruthSource
+        from modules.utils.truth_info import TruthSource
 
         files_original = glob.glob(self.path_original)
         files_original.sort()

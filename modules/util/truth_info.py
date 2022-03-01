@@ -3,69 +3,6 @@ from matplotlib.patches import Ellipse
 import math
 
 
-class transforms:
-    #@staticmethod
-    def transform(X):
-        X[:,0] = transforms.flux_transform(X[:,0])
-        X[:,1] = transforms.hisize_transform(X[:,1])
-        X[:,2] = transforms.sinposa_transform(X[:,2])
-        X[:,3] = transforms.cosposa_transform(X[:,3])
-        X[:,4] = transforms.inca_transform(X[:,4])
-        X[:,5] = transforms.w20_transform(X[:,5])
-        return X
-
-    def inv_transform(X):
-        X[:,0] = transforms.inv_flux_transform(X[:,0])
-        X[:,1] = transforms.inv_hisize_transform(X[:,1])
-        X[:,2] = transforms.inv_sinposa_transform(X[:,2])
-        X[:,3] = transforms.inv_cosposa_transform(X[:,3])
-        X[:,4] = transforms.inv_inca_transform(X[:,4])
-        X[:,5] = transforms.inv_w20_transform(X[:,5])
-        return X
-
-    @staticmethod
-    def flux_transform(x):
-        return np.log(x)/5
-    @staticmethod
-    def hisize_transform(x):
-        return np.log(x)/3
-    @staticmethod
-    def posa_transform(x):
-        return x/360
-    @staticmethod
-    def cosposa_transform(x):
-        return (x + 1)/2.
-    @staticmethod
-    def sinposa_transform(x):
-        return (x + 1)/2.
-    @staticmethod
-    def inca_transform(x):
-        return x/90
-    @staticmethod
-    def w20_transform(x):
-        return x/900
-
-    @staticmethod
-    def inv_flux_transform(x):
-        return np.exp(x*5)
-    @staticmethod
-    def inv_hisize_transform(x):
-        return np.exp(x*3)
-    @staticmethod
-    def inv_posa_transform(x):
-        return x*360
-    @staticmethod
-    def inv_cosposa_transform(x):
-        return x*2 - 1 
-    @staticmethod
-    def inv_sinposa_transform(x):
-        return x*2 - 1 
-    @staticmethod
-    def inv_inca_transform(x):
-        return x*90
-    @staticmethod
-    def inv_w20_transform(x):
-        return x*900
 
 class TruthSource:
     var_titles = [ "ID", "RA", "Dec",

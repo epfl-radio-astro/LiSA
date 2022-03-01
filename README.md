@@ -2,10 +2,10 @@
 Code for the SKA Science Data Challenge #2
 
 ## Installation
-This pipeline requires python 3. The required python libraries can be installed with:
+This pipeline requires python 3. The required python libraries can be installed the `setup.sh` script:
 
 ```bash
-pip install -r requirements.txt
+source setup.sh
 ```
 
 ## Structure

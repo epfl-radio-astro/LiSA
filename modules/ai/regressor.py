@@ -5,7 +5,7 @@ import tensorflow.keras as keras
 import random
 #from sklearn.preprocessing import QuantileTransformer
 
-from modules.truth_info import TruthSource
+from modules.utils.truth_info import TruthSource
 from modules.ai.utils import source_properties, loss_fn
 
 
