@@ -16,5 +16,10 @@ Several different modules are available for data analysis in the `modules` direc
 
 ## Running
 To run the modules, adjust the config file to point to the location of your data and launch the pipeline as follows:
-`python pipelnes/pipeline.py path-to-config-file total-number-of-domains domain-number`
+
+
+```bash
+python pipelnes/pipeline.py path-to-config-file total-number-of-domains domain-number
+```
+
 We also provide example batch scripts in the `pipelines` directory which run all domains using sarray.
