@@ -6,7 +6,7 @@ import tensorflow as tf
 import random
 
 
-from modules.truth_info import TruthSource
+from modules.utils.truth_info import TruthSource
 from modules.ai.utils import source_properties, loss_classifier
 from modules.ai.enums import InputMode
 

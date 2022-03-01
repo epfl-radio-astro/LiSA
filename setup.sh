@@ -1,3 +1,4 @@
 export PYTHONPATH="$PWD"
-source venvs/sdc2-venv/bin/activate
+virtualenv --system-site-packages venvs/lisa 
+source venvs/lisa/bin/activate
 pip install -r requirements.txt

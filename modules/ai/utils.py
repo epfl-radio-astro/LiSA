@@ -4,7 +4,7 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.keras import backend
 import numpy as np
-from modules.truth_info import TruthSource
+from modules.utils.truth_info import TruthSource
 
 source_properties = {
             "Line Flux Integral": lambda x: x.line_flux_integral(),
@@ -13,6 +13,76 @@ source_properties = {
             "Inc A": lambda x: x.inc_a(),
             "w20":lambda x: x.w20(),
             }
+
+import numpy as np
+from matplotlib.patches import Ellipse
+import math
+
+
+class transforms:
+    #@staticmethod
+    def transform(X):
+        X[:,0] = transforms.flux_transform(X[:,0])
+        X[:,1] = transforms.hisize_transform(X[:,1])
+        X[:,2] = transforms.sinposa_transform(X[:,2])
+        X[:,3] = transforms.cosposa_transform(X[:,3])
+        X[:,4] = transforms.inca_transform(X[:,4])
+        X[:,5] = transforms.w20_transform(X[:,5])
+        return X
+
+    def inv_transform(X):
+        X[:,0] = transforms.inv_flux_transform(X[:,0])
+        X[:,1] = transforms.inv_hisize_transform(X[:,1])
+        X[:,2] = transforms.inv_sinposa_transform(X[:,2])
+        X[:,3] = transforms.inv_cosposa_transform(X[:,3])
+        X[:,4] = transforms.inv_inca_transform(X[:,4])
+        X[:,5] = transforms.inv_w20_transform(X[:,5])
+        return X
+
+    @staticmethod
+    def flux_transform(x):
+        return np.log(x)/5
+    @staticmethod
+    def hisize_transform(x):
+        return np.log(x)/3
+    @staticmethod
+    def posa_transform(x):
+        return x/360
+    @staticmethod
+    def cosposa_transform(x):
+        return (x + 1)/2.
+    @staticmethod
+    def sinposa_transform(x):
+        return (x + 1)/2.
+    @staticmethod
+    def inca_transform(x):
+        return x/90
+    @staticmethod
+    def w20_transform(x):
+        return x/900
+
+    @staticmethod
+    def inv_flux_transform(x):
+        return np.exp(x*5)
+    @staticmethod
+    def inv_hisize_transform(x):
+        return np.exp(x*3)
+    @staticmethod
+    def inv_posa_transform(x):
+        return x*360
+    @staticmethod
+    def inv_cosposa_transform(x):
+        return x*2 - 1 
+    @staticmethod
+    def inv_sinposa_transform(x):
+        return x*2 - 1 
+    @staticmethod
+    def inv_inca_transform(x):
+        return x*90
+    @staticmethod
+    def inv_w20_transform(x):
+        return x*900
+
 
 def asymmetry(plane):
     center = np.sum(plane[10:20,10:20])
@@ -106,45 +176,6 @@ class Score(tf.keras.metrics.Metric):
 
         return dict(list(base_config.items()) + list(config.items()))
 
-
-'''
-class Score(tf.keras.metrics.Metric):
-    def __init__(self, threshold, true_sources, false_sources,**kwargs):
-        #from tensorflow.python.ops import init_ops
-        super(Score, self).__init__(**kwargs)
-        num_thresholds = 1
-        self.true_sources = tf.convert_to_tensor(true_sources, dtype=tf.float32)
-        self.false_sources = tf.convert_to_tensor(false_sources, dtype=tf.float32)
-        self.true_positives  = tf.keras.metrics.TruePositives( thresholds = [threshold], name = 'tp')
-        self.false_positives = tf.keras.metrics.FalsePositives(thresholds = [threshold], name = 'fp')
-        self.true_negatives  = tf.keras.metrics.TrueNegatives( thresholds = [threshold], name = 'tn')
-        self.false_negatives = tf.keras.metrics.FalseNegatives(thresholds = [threshold], name = 'fn')
-
-    def update_state(self, y_true, y_pred, sample_weight=None):
-        self.true_positives.update_state(  y_true, y_pred, sample_weight)
-        self.false_positives.update_state( y_true, y_pred, sample_weight)
-        self.true_negatives.update_state(  y_true, y_pred, sample_weight)
-        self.false_negatives.update_state( y_true, y_pred, sample_weight)
-
-    def reset_state(self):
-        self.true_positives.reset_state()
-        self.false_positives.reset_state()
-        self.true_negatives.reset_state()
-        self.false_negatives.reset_state()
-
-    def result(self):
-        from tensorflow.python.ops import math_ops
-
-        tp = self.true_positives.result()
-        fp = self.false_positives.result()
-        tn = self.true_negatives.result()
-        fn = self.false_negatives.result()
-        true_scale  = math_ops.div_no_nan(self.true_sources,  fn  + tp)
-        false_scale = math_ops.div_no_nan(self.false_sources, fp  + tn)
-
-        result = tp*true_scale - fp*false_scale
-        return result
-'''
 
 # for a position at index i,j,k in the original data cube,
 # return the bounding cube from the original and denoised data cubes
