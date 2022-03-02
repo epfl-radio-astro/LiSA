@@ -1,6 +1,6 @@
 import numpy as np
 
-from .util.wavelets import StarletTransform, Wavelet2D1DTransform
+from .wavelets import StarletTransform, Wavelet2D1DTransform
 
 # quick copy-paste for debug
 # import matplotlib.pyplot as plt

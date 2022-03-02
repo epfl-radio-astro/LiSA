@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as col
 from modules.truth_info import  TruthSource
-from modules.util.source_candidate import  SourceCandidate
+from modules.utils.source_candidate import  SourceCandidate
 import time, random, os, math
 from astropy import modeling
 from modules.nht.tools import Tools as T
