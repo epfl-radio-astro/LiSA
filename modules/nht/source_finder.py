@@ -4,7 +4,7 @@ from scipy import optimize as opt
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as col
-from modules.truth_info import  TruthSource
+from modules.util.truth_info import  TruthSource
 from modules.util.source_candidate import  SourceCandidate
 import time, random, os, math
 from astropy import modeling

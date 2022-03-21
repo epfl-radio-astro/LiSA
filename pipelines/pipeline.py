@@ -2,7 +2,7 @@ import numpy as np
 from modules.domain_reader import AstropyDomainReader   as Reader
 from modules.domain_reader import DomainData
 from modules.nht.source_finder import LikelihoodFinder as Finder
-from modules.utils.source_candidate import merge_source_candidates, remove_suspicious_candidates
+from modules.util.source_candidate import merge_source_candidates, remove_suspicious_candidates
 
 from pickle import load
 
@@ -30,7 +30,7 @@ config = configparser.ConfigParser()
 config.read(config_file)
 
 config = config['DEFAULT']
-domain_border        = config.getfloat('domain_border')
+domain_border        = config.getint('domain_border')
 n_domains_config     = config.getint('NDomains')
 input_datacube       = config['input_datacube']
 input_continuumimage = config['input_continuumimage']

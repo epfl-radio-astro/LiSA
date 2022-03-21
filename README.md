@@ -11,10 +11,14 @@ source setup.sh
 ## Structure
 Several different modules are available for data analysis in the `modules` directory. All algorithms interface through the data via the `domain_reader.py` classes, which keeps track of the domain decomposition. The pipeline developed for SDC2 is given in `pipelines/pipeline.py`, and uses all of the modules in this library. The structure of the pipeline is shown in the Figure below:
 <p align="center">
-  <img src="https://github.com/etolley/EPFL-SKA-SDC2/blob/dev/doc/pipeline.png" width="450" title="full data processing pipeline">
+  <img src="https://github.com/epfl-radio-astro/LiSA/blob/main/pipeline.png" width="450" title="full data processing pipeline">
 </p>
 
 ## Running
 To run the modules, adjust the config file to point to the location of your data and launch the pipeline as follows:
-`python pipelnes/pipeline.py path-to-config-file total-number-of-domains domain-number`
+
+```bash
+python pipelines/pipeline.py path-to-config-file total-number-of-domains domain-number
+```
+
 We also provide example batch scripts in the `pipelines` directory which run all domains using sarray.
