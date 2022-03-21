@@ -11,7 +11,7 @@ source setup.sh
 ## Structure
 Several different modules are available for data analysis in the `modules` directory. All algorithms interface through the data via the `domain_reader.py` classes, which keeps track of the domain decomposition. The pipeline developed for SDC2 is given in `pipelines/pipeline.py`, and uses all of the modules in this library. The structure of the pipeline is shown in the Figure below:
 <p align="center">
-  <img src="https://github.com/etolley/EPFL-SKA-SDC2/blob/dev/doc/pipeline.png" width="450" title="full data processing pipeline">
+  <img src="https://github.com/epfl-radio-astro/LiSA/blob/main/pipeline.png" width="450" title="full data processing pipeline">
 </p>
 
 ## Running
