@@ -23,5 +23,3 @@ python pipelnes/pipeline.py path-to-config-file total-number-of-domains domain-n
 ```
 
 We also provide example batch scripts in the `pipelines` directory which run all domains using sarray.
-
-
