@@ -1,10 +1,11 @@
-astropy==5.0.1
-h5py==3.6.0
-iminuit==2.0.0
+astropy==4.1
+h5py
+iminuit
 keras==2.8.0
-numpy
+numpy==1.19.5
 sklearn
-tensorflow==2.8.0
+tensorflow
 numba
-python-pysap
 lmfit
+python-pysap==0.0.5
+PyQt5

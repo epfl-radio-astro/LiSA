@@ -4,7 +4,7 @@ from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.keras import backend
 import numpy as np
-from modules.utils.truth_info import TruthSource
+from modules.util.truth_info import TruthSource
 
 source_properties = {
             "Line Flux Integral": lambda x: x.line_flux_integral(),
