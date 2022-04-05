@@ -14,9 +14,7 @@ from .util.wavelets import StarletTransform, Wavelet2D1DTransform
 class SimpleStarletDenoiser(object):
     """
     Class that manages starlet denoising for an arbitrarily sized data cube.
-
     The model is simply Y = X + N, where X is the noiseless signal and N is the noise.
-
     The denoising implies minimising the mean-squared error, subject to the following constraints:
     - sparsity in starlet space, for each frequency slices INDEPENDENTLY
     - positivity constraint
@@ -24,7 +22,6 @@ class SimpleStarletDenoiser(object):
 
     def __init__(self, num_procs=1, threshold_type='soft', verbose=True):
         """Initialise the denoiser.
-
         Parameters
         ----------
         num_procs : int
@@ -46,7 +43,6 @@ class SimpleStarletDenoiser(object):
     def denoise(self, input_image, method='simple', threshold_level=3,
                 threshold_increment_high_freq=2, num_scales=None, **kwargs_method):
         """Denoise the data according to the chosen method.
-
         Parameters
         ----------
         input_image : array_like
@@ -65,16 +61,12 @@ class SimpleStarletDenoiser(object):
             Number of starlet decomposition scales. Maximal value is int(np.log2(input_image_.shape[-1])). Default: None (max. value).
         kwargs_method : dict
             [See docstring of each method]
-
         Returns
         -------
         array_like
             Denoised array
         """
-        if input_image.shape[-2] != input_image.shape[-1]:
-            raise ValueError("Only square images are supported")
-
-        # standardize input shape
+        # standardize input shape
         input_image_ = np.copy(input_image)
         if len(input_image_.shape) == 2:
             input_image_ = input_image_[None, :, :]  # add extra fake dimension
@@ -85,7 +77,8 @@ class SimpleStarletDenoiser(object):
             raise ValueError(f"Input image shape {input_image_.shape} is not supported")
 
         # set the number of decomposition scales
-        num_scales_max = int(np.log2(input_image_.shape[-1]))
+        smaller_edge = min(input_image_.shape[-2], input_image_.shape[-1])
+        num_scales_max = int(np.log2(smaller_edge))
         if num_scales is None or num_scales < 2 or num_scales > num_scales_max:
             # choose the maximum allowed number of scales
             num_scales = num_scales_max
@@ -122,7 +115,6 @@ class SimpleStarletDenoiser(object):
     def _denoise_iterative(self, num_iter=20, num_reweight=2, progressive_threshold=True):
         """Denoise the data simply by doing an iterative thresholding in starlet space with positivity constraint,
         based on estimated noise per frequency slice propagated in starlet space.
-
         Parameters
         ----------
         num_iter : int
@@ -132,7 +124,6 @@ class SimpleStarletDenoiser(object):
         progressive_threshold : bool
             If True, the threshold is exponentially decreased from an initial values estimated from the data,
             to the chosen final value. Default: True
-
         Returns
         -------
         array_like
@@ -195,7 +186,6 @@ class SimpleStarletDenoiser(object):
         """Denoise the data simply by doing a one-step thresholding in starlet space with positivity constraint,
         based on estimated noise per frequency slice propagated in starlet space.
         This is effectively equivalent to self._denoise_iterative() method, with num_iter=1 and no progressive_threshold=False.
-
         Returns
         -------
         array_like
@@ -219,7 +209,6 @@ class SimpleStarletDenoiser(object):
         """Denoise the data simply by thresholding the values in direct space,
         based on estimated noise per frequency slice.
         This does not apply any sparsity nor positivity constraint.
-
         Returns
         -------
         array_like
@@ -241,7 +230,6 @@ class SimpleStarletDenoiser(object):
     @staticmethod
     def step_forward_backward(x, grad, prox, step_size):
         """One step of the Forward Backward Algorithm.
-
         Parameters
         ----------
         x : array_like
@@ -252,7 +240,6 @@ class SimpleStarletDenoiser(object):
             Function that takes two positional arguments: the variable being optimised, and the gradient step size
         step_size : float
             Step size for the gradient descent step
-
         Returns
         -------
         array_like
@@ -266,14 +253,12 @@ class SimpleStarletDenoiser(object):
         """Gradient of the data-fidelity term in the lost function, with respect to the main variable.
         The model is Y = X + N, where X in the denoised signal and N is the noise.
         The data-fidelity term is the mean-squared error ||Y' - Y||, where Y' represents the data.
-
         Parameters
         ----------
         model : array_like
             Any array
         data : array_like
             Any array
-
         Returns
         -------
         array_like
@@ -285,7 +270,6 @@ class SimpleStarletDenoiser(object):
 
     def _proximal(self, array, thresh, noise_levels, weights=None):
         """Proximal operator of the l0- or l1- sparsity + positivity constraints.
-
         Parameters
         ----------
         array : array_like
@@ -296,7 +280,6 @@ class SimpleStarletDenoiser(object):
             Noise level per starlet scale
         weights:
             Weights per pixel per scale. If None, no weights are applied
-
         Returns
         -------
         array_like
@@ -310,7 +293,6 @@ class SimpleStarletDenoiser(object):
 
     def _prox_sparsity_constraint(self, array, thresh, noise_levels, weights=None):
         """Proximal operator of the l0- or l1- sparsity constraint (hard or soft threshold, respectively)
-
         Parameters
         ----------
         array : array_like
@@ -321,7 +303,6 @@ class SimpleStarletDenoiser(object):
             Noise level per starlet scale
         weights:
             Weights per pixel per scale. If None, no weights are applied
-
         Returns
         -------
         array_like
@@ -345,12 +326,10 @@ class SimpleStarletDenoiser(object):
     @staticmethod
     def _prox_positivity_constraint(array):
         """Proximal operator of the positivity constraint
-
         Parameters
         ----------
         array : array_like
             Any array that supports index slicing
-
         Returns
         -------
         array_like
@@ -363,7 +342,6 @@ class SimpleStarletDenoiser(object):
     @staticmethod
     def threshold(array, threshold_value, threshold_type='soft'):
         """Translate the noise estimation from direct space to starlet space
-
         Parameters
         ----------
         array : array_like
@@ -372,12 +350,10 @@ class SimpleStarletDenoiser(object):
             Threshold in same units as array
         threshold_type : string
             Supported values are 'soft' or 'hard'
-
         Returns
         -------
         array_like
             Thresholded array
-
         Raises
         ------
         ValueError
@@ -398,12 +374,10 @@ class SimpleStarletDenoiser(object):
 
     def _propagate_noise(self, noise):
         """Translate the noise estimation from direct space to starlet space
-
         Parameters
         ----------
         noise : float
             Noise value in direct space
-
         Returns
         -------
         float
@@ -415,7 +389,6 @@ class SimpleStarletDenoiser(object):
     def _compute_weights(self, array, noise_levels, threshold):
         """Compute weight (per pixel per starlet scale) for l1-reweighting scheme
         (used for 'soft' threshold_type) based on the starlet decomposition of the input array
-
         Parameters
         ----------
         array : array_like
@@ -424,7 +397,6 @@ class SimpleStarletDenoiser(object):
             1D array or list containing the noise level per starlet scale
         threshold : float
             Threshold in noise units
-
         Returns
         -------
         float
@@ -442,12 +414,10 @@ class SimpleStarletDenoiser(object):
     def _estimate_noise(self, array):
         """Estimate noise standard deviation from the median absolute deviation (MAD)
         on the first starlet decomposition scale
-
         Parameters
         ----------
         array : array_like
             Image on which the noise is estimated
-
         Returns
         -------
         float
@@ -462,14 +432,12 @@ class SimpleStarletDenoiser(object):
         """
         estimate maximum threshold, in units of noise, used for thresholding wavelets
         coefficients during optimization
-
         Parameters
         ----------
         data : array_like
             Imaging data.
         fraction : float, optional
             From 0 to 1, fraction of the maximum value of the image in transformed space, normalized by noise, that is returned as a threshold.
-
         Returns
         -------
         float
@@ -484,7 +452,6 @@ class SimpleStarletDenoiser(object):
     @staticmethod
     def exponential_decrease(curr_value, init_value, min_value, num_iter, num_iter_at_min_value):
         """Computes a exponentially decreasing value, for a given loop index, starting at a specified value.
-
         Parameters
         ----------
         curr_value : float
@@ -497,12 +464,10 @@ class SimpleStarletDenoiser(object):
             Total number of iterations.
         num_iter_at_min_value : int
             Number of iteration for which the returned value equals `min_value`.
-
         Returns
         -------
         float
             Exponentially decreased value.
-
         Raises
         ------
         ValueError
@@ -518,24 +483,23 @@ class SimpleStarletDenoiser(object):
 
 class Denoiser2D1D(object):
     """Denoise a data cube using a 2D1D wavelet decomposition.
-
     The model is simply Y = X + N, where X is the noiseless signal and N is
     the noise.
-
     """
-    def __init__(self, threshold_type='soft', verbose=True):
+    def __init__(self, threshold_type='soft', correlated_noise=False, verbose=True):
         """Initialise the denoiser.
-
         Parameters
         ----------
         threshold_type : string
             Supported values are 'soft' or 'hard'. Default: 'soft'
+        correlated_noise : bool
+            If True, an iterative noise estimation will be carried out to prevent under-estimating the noise.
         verbose : bool
             If True, prints some more info, useful for debugging. Default: True.
-
         """
         self.mr2d1d = Wavelet2D1DTransform()
         self._threshold_type = threshold_type
+        self._correl_noise = correlated_noise
         self._verbose = verbose
 
     def __call__(self, *args, **kwargs):
@@ -544,9 +508,9 @@ class Denoiser2D1D(object):
 
     def denoise(self, input_cube, threshold_level=3,
                 threshold_increment_high_freq=2, num_scales_2d=None,
-                num_scales_1d=None, noise_estimate=None):
+                num_scales_1d=None, noise_estimate=None,
+                num_iter_noise=3, return_noise_levels=False):
         """Denoise a data cube according to the chosen method.
-
         Parameters
         ----------
         input_cube : array_like (3D)
@@ -572,12 +536,12 @@ class Denoiser2D1D(object):
             An estimate of the noise (e.g. by simulation). If not provided,
             the noise level is estimated automatically in each wavelet sub-band.
             Default: None
-
+        num_iter_noise : number of iterations for estimating the noise in wavelet space.
+            Only used if correlated_noise is True.
         Returns
         -------
         array_like
             Denoised array
-
         """
         # Set the number of 2D decomposition scales
         num_scales_2d_max = int(np.log2(input_cube.shape[1])) - 1
@@ -611,23 +575,21 @@ class Denoiser2D1D(object):
         self._thresh_min = float(threshold_level)
         self._thresh_increm = float(threshold_increment_high_freq)
         self._noise = noise_estimate
+        self._num_iter_noise = num_iter_noise
 
         # Run the denoiser (could implement iterative method if necessary)
-        result = self._denoise_simple()
+        result = self._denoise_simple(return_noise_levels)
 
         return result
 
-    def _denoise_simple(self):
+    def _denoise_simple(self, return_noise_levels):
         """Denoise the data using a one-step thresholding in 3D wavelet space.
-
         This is effectively equivalent to the iterative method with num_iter=1
         and progressive_threshold=False. A positivity constraint is enforced.
-
         Returns
         -------
         array_like
             Denoised data cube
-
         """
         # Denoise considering the full 3D wavelet deconstruction
         inds, w_data = self.mr2d1d.decompose(self._data,
@@ -639,18 +601,62 @@ class Denoiser2D1D(object):
             _, w_noise = self.mr2d1d.decompose(self._noise,
                                                self._num_scales_2d,
                                                self._num_scales_1d)
-        else:
-            # Extract coeffs at smallest 2D scale for noise estimation
-            noise_est = []
+
+        # Extract coeffs at smallest 2D scale for noise estimation
+        # if self._correl_noise is False:
+        noise_est = []
+        for scale1d in range(self._num_scales_1d):
+            start0, end0 = inds[0][scale1d]
+            nz0 = (end0 - start0) // (self._num_pixels)
+            c_data0 = w_data[start0:end0].reshape(nz0, self._num_pixels)
+            noise_est.append(1.48 * self._mad2d(c_data0))
+
+        # If noise is spatially correlated, iteratively estimate it in wavelet space from data residuals
+        # else:
+        residual_cube = np.copy(self._data)
+        filtered_cube = 0.
+        for i in range(self._num_iter_noise):
+            r_inds, residual_coef = self.mr2d1d.decompose(residual_cube,
+                                                        self._num_scales_2d,
+                                                        self._num_scales_1d)
+            for scale2d in range(self._num_scales_2d):
+                for scale1d in range(self._num_scales_1d):
+                    if scale1d == self._num_scales_1d-1 and scale2d == self._num_scales_2d-1:
+                        continue  # coarse scale ?
+                    start, end = r_inds[scale2d][scale1d]
+                    nz = (end - start) // (self._num_pixels)
+                    residual_coef_j = residual_coef[start:end].reshape(nz, self._num_pixels)
+                    mad = self._mad2d(residual_coef_j)
+                    std_dev = 1.48 * mad
+                    residual_coef_j = self.threshold(residual_coef_j, 5.*std_dev, threshold_type='hard')
+                    residual_coef[start:end] = residual_coef_j.flatten()
+            filtered_cube = filtered_cube + self.mr2d1d.reconstruct(residual_coef)
+            residual_cube = self._data - filtered_cube
+        r_inds, residual_coef = self.mr2d1d.decompose(residual_cube,
+                                                      self._num_scales_2d,
+                                                      self._num_scales_1d)
+        noise_est_new = []
+        for scale2d in range(self._num_scales_2d):
+            noise_est_new_in = []
             for scale1d in range(self._num_scales_1d):
-                start0, end0 = inds[0][scale1d]
-                nz0 = (end0 - start0) // (self._num_pixels)
-                c_data0 = w_data[start0:end0].reshape(nz0, self._num_pixels)
-                noise_est.append(1.48 * self._mad2d(c_data0))
+                start, end = r_inds[scale2d][scale1d]
+                nz = (end - start) // (self._num_pixels)
+                residual_coef_j = residual_coef[start:end].reshape(nz, self._num_pixels)
+                noise_est_new_in.append(1.48 * self._mad2d(residual_coef_j))
+            noise_est_new.append(noise_est_new_in)
+
+        # This will store the estimation of the noise level per 2D scale, averaged over 1D scales
+        indices = []
+        noise_levels_uncorrel = []
+        noise_levels_correl = []
 
         # Filter (threshold) the data with one pass
         for scale2d in range(self._num_scales_2d):
             for scale1d in range(self._num_scales_1d):
+
+                if scale1d == self._num_scales_1d-1 and scale2d == self._num_scales_2d-1:
+                    continue  # coarse scale ?
+
                 # Extract the coefficients for this sub-band
                 # Note that the coeffs are stored as a 2D array, where the first
                 # dimension is frequency, and the second represents the flattened
@@ -666,7 +672,19 @@ class Denoiser2D1D(object):
                 else:
                     # Estimate the noise std. dev. by propagating the estimate
                     # from the finest 2D scale (j = 0)
-                    noise_level = self._propagate_noise(noise_est[scale1d], scale2d)
+                    noise_level_uncorrel = self._propagate_noise(noise_est[scale1d], scale2d)
+                    
+                    # or through estimation on pre-filtered cube
+                    # noise_level = noise_est_new[scale2d, scale1d]
+                    c_noise = residual_coef[start:end].reshape(nz, self._num_pixels)
+                    noise_level_correl = 1.48 * self._mad2d(c_noise)
+
+                    if self._correl_noise is False:
+                        noise_level = noise_level_uncorrel
+                    else:
+                        noise_level = noise_level_correl
+
+                    # print(f"mean noise_est at {scale2d}, {scale1d} : {np.mean(noise_level):.3e}")
 
                 # Increase the threshold for the highest spatial freqs
                 thresh = self._thresh_min
@@ -677,18 +695,25 @@ class Denoiser2D1D(object):
                 c_thresh = self._prox_sparsity_constraint(c_data, thresh, noise_level)
                 w_data[start:end] = c_thresh.flatten()
 
+                # Save noise levels for output
+                indices.append((scale2d, scale1d))
+                noise_levels_uncorrel.append(np.mean(noise_level_uncorrel))
+                noise_levels_correl.append(np.mean(noise_level_correl))
+
         # Bring back to direct space by inverse transform
         result = self.mr2d1d.reconstruct(w_data)
 
         # Apply the positivity constraint
         result = self._prox_positivity_constraint(result)
 
+        if return_noise_levels is True:
+            return result, (indices, noise_levels_uncorrel, noise_levels_correl)
+
         return result
 
 
     def _prox_sparsity_constraint(self, coeffs, thresh, noise_level, weights=None):
         """Proximal operator of the l0- or l1-sparsity constraint.
-
         Parameters
         ----------
         coeffs : array_like
@@ -699,12 +724,10 @@ class Denoiser2D1D(object):
             Noise level at the scale represented by `array`
         weights : array_like
             Weights per pixel per scale. If None, no weights are applied
-
         Returns
         -------
         array_like
             Array on which the sparsity constraint has been applied
-
         """
         if weights is None:
             weights = np.ones_like(coeffs)
@@ -716,24 +739,20 @@ class Denoiser2D1D(object):
     @staticmethod
     def _prox_positivity_constraint(array):
         """Proximal operator of the positivity constraint.
-
         Parameters
         ----------
         array : array_like
             Any array
-
         Returns
         -------
         array_like
             Array with all negative entries set to zero
-
         """
         return np.maximum(0, array)
 
     @staticmethod
     def threshold(array, threshold_value, threshold_type='soft'):
         """Translate the noise estimation from direct space to wavelet space.
-
         Parameters
         ----------
         array : array_like
@@ -742,12 +761,10 @@ class Denoiser2D1D(object):
             Threshold in same units as array
         threshold_type : string
             Supported values are 'soft' or 'hard'
-
         Returns
         -------
         array_like
             Thresholded array
-
         Raises
         ------
         ValueError
@@ -768,7 +785,6 @@ class Denoiser2D1D(object):
 
     def _propagate_noise(self, noise_est0, scale2d):
         """Estimate the noise level in a wavelet sub-band.
-
         Parameters
         ----------
         noise_est0 : array_like, 2D
@@ -776,12 +792,10 @@ class Denoiser2D1D(object):
             for a particular 1D scale
         scale_2d : int
             2D wavelet scale to propagate the noise to
-
         Returns
         -------
         array :
             Frequency-dependent noise estimation at scale2d
-
         """
         if scale2d == 0:
             factor = 1
@@ -795,17 +809,14 @@ class Denoiser2D1D(object):
     @staticmethod
     def _mad2d(array):
         """Compute the median absolute deviation (MAD)
-
         Parameters
         ----------
         array : array_like, 2D
             Values on which to compute the MAD
-
         Returns
         -------
         array :
             MAD values (still 2D)
-
         """
         assert np.asarray(array).ndim == 2, "array must be 2D"
 

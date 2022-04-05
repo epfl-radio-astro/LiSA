@@ -37,10 +37,10 @@ input_continuumimage = config['input_continuumimage']
 output_directory     = config['output_directory']
 
 square_domains    = config.getboolean('square_domains')
-wavelet_threshold = getfloat('wavelet_threshold')
-wavelet_zstep     = getint('wavelet_zstep')
-lkh_threshold     = getfloat('lkh_threshold')
-lkh_zbinning      = getint('lkh_zbinning')
+wavelet_threshold = config.getfloat('wavelet_threshold')
+wavelet_zstep     = config.getint('wavelet_zstep')
+lkh_threshold     = config.getfloat('lkh_threshold')
+lkh_zbinning      = config.getint('lkh_zbinning')
 lkh_isdatadenoised= config.getboolean('lkh_isdatadenoised') 
 ####### END USER CONFIG #######
 
@@ -65,17 +65,16 @@ print("====== Domain {0}: starting ======".format(domain_index ))
 #===== define domains  =====
 
 # interface to original data
-reader_original = Reader(n_domains, domain_index, input_datacube, input_continuumimage, border = domain_border,  forceSquare=square_domains)
+reader_original = Reader(n_domains, domain_index, input_datacube, border = domain_border,  forceSquare=square_domains)
 reader_original.define_domains()
 reader_original._read_header()
 
 #interface to denoised data
-reader_denoised = Reader(n_domains, domain_index, input_datacube, input_continuumimage, border = domain_border,  forceSquare=square_domains)
+reader_denoised = Reader(n_domains, domain_index, input_datacube, border = domain_border,  forceSquare=square_domains)
 reader_denoised.define_domains()
 reader_denoised._read_header()
 
-# reduce domain size if not running with MPI
-print("I am domain {0} of {1}".format(domain_index+1, n_domains), flush=True)
+#print("I am domain {0} of {1}".format(domain_index+1, n_domains), flush=True)
 print(reader_original)
 
 ######################################################
@@ -95,7 +94,7 @@ else:
 
     # denoise the domain
     from modules.denoiser import Denoiser2D1D as Denoiser
-    denoiser = Denoiser() 
+    denoiser = Denoiser(correlated_noise=False) 
 
     # allocate denoised cube
     output_cube = np.zeros(reader_denoised.HI_cube.data.shape)
