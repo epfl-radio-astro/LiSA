@@ -509,7 +509,7 @@ class Denoiser2D1D(object):
     def denoise(self, input_cube, threshold_level=3,
                 threshold_increment_high_freq=2, num_scales_2d=None,
                 num_scales_1d=None, noise_estimate=None,
-                num_iter_noise=3):
+                num_iter_noise=3, return_noise_levels=False):
         """Denoise a data cube according to the chosen method.
         Parameters
         ----------
@@ -578,11 +578,11 @@ class Denoiser2D1D(object):
         self._num_iter_noise = num_iter_noise
 
         # Run the denoiser (could implement iterative method if necessary)
-        result = self._denoise_simple()
+        result = self._denoise_simple(return_noise_levels)
 
         return result
 
-    def _denoise_simple(self):
+    def _denoise_simple(self, return_noise_levels):
         """Denoise the data using a one-step thresholding in 3D wavelet space.
         This is effectively equivalent to the iterative method with num_iter=1
         and progressive_threshold=False. A positivity constraint is enforced.
@@ -603,55 +603,59 @@ class Denoiser2D1D(object):
                                                self._num_scales_1d)
 
         # Extract coeffs at smallest 2D scale for noise estimation
-        if self._correl_noise is False:
-            noise_est = []
-            for scale1d in range(self._num_scales_1d):
-                start0, end0 = inds[0][scale1d]
-                nz0 = (end0 - start0) // (self._num_pixels)
-                c_data0 = w_data[start0:end0].reshape(nz0, self._num_pixels)
-                noise_est.append(1.48 * self._mad2d(c_data0))
+        # if self._correl_noise is False:
+        noise_est = []
+        for scale1d in range(self._num_scales_1d):
+            start0, end0 = inds[0][scale1d]
+            nz0 = (end0 - start0) // (self._num_pixels)
+            c_data0 = w_data[start0:end0].reshape(nz0, self._num_pixels)
+            noise_est.append(1.48 * self._mad2d(c_data0))
 
         # If noise is spatially correlated, iteratively estimate it in wavelet space from data residuals
-        else:
-            residual_cube = np.copy(self._data)
-            filtered_cube = 0.
-            for i in range(self._num_iter_noise):
-                r_inds, residual_coef = self.mr2d1d.decompose(residual_cube,
-                                                            self._num_scales_2d,
-                                                            self._num_scales_1d)
-                for scale2d in range(self._num_scales_2d):
-                    for scale1d in range(self._num_scales_1d):
-                        # if scale1d == self._num_scales_1d-1: # and scale2d == self._num_scales_2d-1:
-                        #     continue  # coarse scale ?
-                        start, end = r_inds[scale2d][scale1d]
-                        nz = (end - start) // (self._num_pixels)
-                        residual_coef_j = residual_coef[start:end].reshape(nz, self._num_pixels)
-                        mad = self._mad2d(residual_coef_j)
-                        std_dev = 1.48 * mad
-                        residual_coef_j = self.threshold(residual_coef_j, 5.*std_dev, threshold_type='hard')
-                        residual_coef[start:end] = residual_coef_j.flatten()
-                filtered_cube = filtered_cube + self.mr2d1d.reconstruct(residual_coef)
-                residual_cube = self._data - filtered_cube
+        # else:
+        residual_cube = np.copy(self._data)
+        filtered_cube = 0.
+        for i in range(self._num_iter_noise):
             r_inds, residual_coef = self.mr2d1d.decompose(residual_cube,
-                                                          self._num_scales_2d,
-                                                          self._num_scales_1d)
-            noise_est_new = []
+                                                        self._num_scales_2d,
+                                                        self._num_scales_1d)
             for scale2d in range(self._num_scales_2d):
-                noise_est_new_in = []
                 for scale1d in range(self._num_scales_1d):
+                    if scale1d == self._num_scales_1d-1 and scale2d == self._num_scales_2d-1:
+                        continue  # coarse scale ?
                     start, end = r_inds[scale2d][scale1d]
                     nz = (end - start) // (self._num_pixels)
                     residual_coef_j = residual_coef[start:end].reshape(nz, self._num_pixels)
-                    noise_est_new_in.append(1.48 * self._mad2d(residual_coef_j))
-                noise_est_new.append(noise_est_new_in)
-            noise_est_new = np.array(noise_est_new)  # final noise estimation for each wavelet scales
+                    mad = self._mad2d(residual_coef_j)
+                    std_dev = 1.48 * mad
+                    residual_coef_j = self.threshold(residual_coef_j, 5.*std_dev, threshold_type='hard')
+                    residual_coef[start:end] = residual_coef_j.flatten()
+            filtered_cube = filtered_cube + self.mr2d1d.reconstruct(residual_coef)
+            residual_cube = self._data - filtered_cube
+        r_inds, residual_coef = self.mr2d1d.decompose(residual_cube,
+                                                      self._num_scales_2d,
+                                                      self._num_scales_1d)
+        noise_est_new = []
+        for scale2d in range(self._num_scales_2d):
+            noise_est_new_in = []
+            for scale1d in range(self._num_scales_1d):
+                start, end = r_inds[scale2d][scale1d]
+                nz = (end - start) // (self._num_pixels)
+                residual_coef_j = residual_coef[start:end].reshape(nz, self._num_pixels)
+                noise_est_new_in.append(1.48 * self._mad2d(residual_coef_j))
+            noise_est_new.append(noise_est_new_in)
+
+        # This will store the estimation of the noise level per 2D scale, averaged over 1D scales
+        indices = []
+        noise_levels_uncorrel = []
+        noise_levels_correl = []
 
         # Filter (threshold) the data with one pass
         for scale2d in range(self._num_scales_2d):
             for scale1d in range(self._num_scales_1d):
 
-                # if scale1d == self._num_scales_1d-1: # and scale2d == self._num_scales_2d-1:
-                #     continue  # coarse scale ?
+                if scale1d == self._num_scales_1d-1 and scale2d == self._num_scales_2d-1:
+                    continue  # coarse scale ?
 
                 # Extract the coefficients for this sub-band
                 # Note that the coeffs are stored as a 2D array, where the first
@@ -668,12 +672,19 @@ class Denoiser2D1D(object):
                 else:
                     # Estimate the noise std. dev. by propagating the estimate
                     # from the finest 2D scale (j = 0)
-                    if self._correl_noise is False:
-                        noise_level = self._propagate_noise(noise_est[scale1d], scale2d)
-                    else:
-                        noise_level = noise_est_new[scale2d, scale1d]
+                    noise_level_uncorrel = self._propagate_noise(noise_est[scale1d], scale2d)
+                    
+                    # or through estimation on pre-filtered cube
+                    # noise_level = noise_est_new[scale2d, scale1d]
+                    c_noise = residual_coef[start:end].reshape(nz, self._num_pixels)
+                    noise_level_correl = 1.48 * self._mad2d(c_noise)
 
-                    print(f"mean noise_est at {scale2d}, {scale1d} : {np.mean(noise_level):.3e}")
+                    if self._correl_noise is False:
+                        noise_level = noise_level_uncorrel
+                    else:
+                        noise_level = noise_level_correl
+
+                    # print(f"mean noise_est at {scale2d}, {scale1d} : {np.mean(noise_level):.3e}")
 
                 # Increase the threshold for the highest spatial freqs
                 thresh = self._thresh_min
@@ -684,11 +695,19 @@ class Denoiser2D1D(object):
                 c_thresh = self._prox_sparsity_constraint(c_data, thresh, noise_level)
                 w_data[start:end] = c_thresh.flatten()
 
+                # Save noise levels for output
+                indices.append((scale2d, scale1d))
+                noise_levels_uncorrel.append(np.mean(noise_level_uncorrel))
+                noise_levels_correl.append(np.mean(noise_level_correl))
+
         # Bring back to direct space by inverse transform
         result = self.mr2d1d.reconstruct(w_data)
 
         # Apply the positivity constraint
         result = self._prox_positivity_constraint(result)
+
+        if return_noise_levels is True:
+            return result, (indices, noise_levels_uncorrel, noise_levels_correl)
 
         return result
 
