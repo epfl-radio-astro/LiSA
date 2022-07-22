@@ -110,7 +110,7 @@ def loss_classifier(y_true, y_pred):
     #return tf.keras.losses.binary_crossentropy(y_true, y_pred)  + tf.reduce_sum( y_pred*(1-2*y_true))*0.01
     return tf.keras.losses.binary_crossentropy(y_true, y_pred) - positives
 
-
+'''
 class Score(tf.keras.metrics.Metric):
     def __init__(self, thresholds=[0.8], true_sources=10, false_sources=10,**kwargs):
         super(Score, self).__init__(**kwargs)
@@ -175,7 +175,7 @@ class Score(tf.keras.metrics.Metric):
         base_config = super(Score, self).get_config()
 
         return dict(list(base_config.items()) + list(config.items()))
-
+'''
 
 # for a position at index i,j,k in the original data cube,
 # return the bounding cube from the original and denoised data cubes

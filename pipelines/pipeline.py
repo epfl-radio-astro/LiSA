@@ -136,7 +136,7 @@ merge_source_candidates(source_candidates_file_name, merged_source_candidates_fi
 ######################################################
 print("====== Domain {0}: setting up Neural Network ======".format(domain_index), flush=True)
 import tensorflow as tf
-from modules.ai.utils import transforms, loss_fn, get_cutouts
+from modules.ai.utils import transforms, loss_fn, get_cutout
 import modules.ai.classifier as classifier
 import modules.ai.regressor as regressor
 
@@ -163,7 +163,7 @@ with open(merged_source_candidates_file_name, 'r') as f:
         # get subcube around source posiiton
         cutout= get_cutout(i, j, k, reader_original, zwidth = 100)
         if cutout.shape[0] != 200:
-            print("Unable to classify source with cutout dim", original_cutout.shape)
+            print("Unable to classify source with cutout dim", cutout.shape)
             continue
         cutout.shape = (1,*cutout.shape)
 

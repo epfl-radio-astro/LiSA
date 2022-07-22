@@ -1,7 +1,6 @@
 astropy==4.1
 h5py
 iminuit
-keras==2.8.0
 numpy==1.19.5
 sklearn
 tensorflow
